@@ -17,12 +17,26 @@ namespace Tetris
             {
               currentBlock = value;
                 currentBlock.Reset();
+
+                for (int i = 0; i < 2; i++)
+                {
+                    currentBlock.Move(1, 0);
+
+                    if (!BlockFits())
+                    {
+                        currentBlock.Move(-1, 0);
+                    }
+
+                }
             }
         }
 
         public GameGrid GameGrid { get; }
         public BlockQueue BlockQueue { get; }
         public bool GameOver { get; private set; }
+        public int Score { get; private set; }
+        public Block HeldBlock { get; private set; }
+        public bool CanHold { get; private set; }
 
 
         public GameState()
@@ -30,6 +44,7 @@ namespace Tetris
             GameGrid = new GameGrid(22, 10);
             BlockQueue = new BlockQueue();
             CurrentBlock = BlockQueue.GetAndUpdate();
+            CanHold = true;
         }
 
         private bool BlockFits()
@@ -44,6 +59,27 @@ namespace Tetris
             return true;
         }
 
+
+        public void HoldBlock()
+        {
+            if (!CanHold)
+            {
+                return;
+            }
+            if (HeldBlock == null)
+            {
+                HeldBlock = CurrentBlock;
+                CurrentBlock = BlockQueue.GetAndUpdate();
+            }
+            else
+            {
+                Block tmp = CurrentBlock;
+                CurrentBlock = HeldBlock;
+                HeldBlock = tmp;
+            }
+
+            CanHold = false;
+        }
         public void RotateBlockCW()
         {
             CurrentBlock.RotateCW();
@@ -91,7 +127,7 @@ namespace Tetris
             {
                 GameGrid[p.Row, p.Column] = CurrentBlock.Id;
             }
-            GameGrid.ClearFullRows();
+           Score += GameGrid.ClearFullRows();
 
             if (IsGameOver())
             {
@@ -100,6 +136,7 @@ namespace Tetris
             else
             {
                 CurrentBlock = BlockQueue.GetAndUpdate();
+                CanHold = true;
             }
         }
 
@@ -114,6 +151,30 @@ namespace Tetris
             }
         }
 
+        private int TileDropDistance(Position p)
+        {
+            int drop = 0;
+            while (GameGrid.IsEmpty(p.Row + drop + 1, p.Column))
+            {
+                drop++;
+            }
+            return drop;
+        }
 
+        public int BlockDropDistance()
+        {
+            int drop = GameGrid.Rows;
+            foreach (Position p in CurrentBlock.TilePositions())
+            {
+                drop = System.Math.Min(drop, TileDropDistance(p));
+            }
+            return drop;
+        }
+
+        public void DropBlock()
+        {
+            currentBlock.Move(BlockDropDistance(), 0);
+            PlaceBlock() ;
+        }
     }
 }

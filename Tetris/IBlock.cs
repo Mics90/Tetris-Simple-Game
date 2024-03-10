@@ -8,7 +8,7 @@ namespace Tetris
 {
     public class IBlock : Block
     {
-        private readonly Position[] tiles = new Position[][]
+        private readonly Position[][] tiles = new Position[][]
         {
             new Position[] { new (1,0), new (1,1), new (1,2), new (1,3) },
             new Position[] { new (0,2), new(1,2), new(2,2), new(3,2) } ,
